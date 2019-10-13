@@ -4,6 +4,6 @@ A small Haskell program to display in which order combatants fight in an initiat
 
 # Run
 
-stack build && stack exec -- initiative-counter
+`stack build && stack exec -- initiative-counter`
 
 visit localhost:8023
