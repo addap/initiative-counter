@@ -7,7 +7,7 @@ import Graphics.UI.Threepenny.Core
 
 
 import Data.IORef
-import Control.Monad (void, liftM, liftM3)
+import Control.Monad (void)
 import qualified Data.List as L (delete)
 import Data.Bool (bool)
 import Data.List (intersperse)
@@ -17,7 +17,7 @@ import Core
 combatOrderLength = 10
   
 main :: IO ()
-main = startGUI defaultConfig { jsStatic = Just "." } setup
+main = startGUI defaultConfig { jsStatic = Just ".", jsAddr = Nothing } setup
 
 setup :: Window -> UI ()
 setup window = do
