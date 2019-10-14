@@ -21,6 +21,7 @@ main = startGUI defaultConfig { jsStatic = Just "." } setup
 
 setup :: Window -> UI ()
 setup window = do
+  UI.addStyleSheet window "bootstrap.min.css"
   UI.addStyleSheet window "main.css"
   return window # set UI.title "Initiative Counter"
 
@@ -49,8 +50,8 @@ setup window = do
       bdelete <- UI.button # set UI.text "-"
       on UI.click bdelete $ \_ -> removeCombatant c >> redoLayout
       
-      row [ UI.span # set UI.text (show c)
-          , element bdelete ]
+      UI.div #. "row" #+ [ UI.span #. "col" # set UI.text (show c)
+                         , element bdelete #. "col" ]
       
     redoLayout :: UI ()
     redoLayout = void $ do
@@ -79,13 +80,13 @@ setup window = do
       element sround # set UI.text ("Current Round: " ++ (show round))
       liftIO $ modifyIORef nextRoundRef (const nextRound)
       
-      column $
-        [ row [ element tname, element tinitiative, element bsubmit ]
+      UI.div #. "container" #+
+        ([ UI.div #. "row" #+ [ element tname #. "col", element tinitiative #. "col", element bsubmit #. "col" ]
         , UI.hr ]
         ++ combatantSection ++
         [ UI.hr
-        , row [ element bswitchcombat, element bnextround, element sround ] ]
-        ++ combatOrderSection
+        , UI.div #. "row" #+ [ element bswitchcombat #. "col", element bnextround #. "col", element sround #. "col" ] ]
+        ++ combatOrderSection)
 
     toCombatElement :: (Int,[Combatant]) -> UI Element
     toCombatElement (i,cs) = UI.li #+ [ UI.span # set UI.text (show i ++ ": ")
