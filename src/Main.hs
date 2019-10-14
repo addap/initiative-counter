@@ -23,6 +23,11 @@ setup :: Window -> UI ()
 setup window = do
   UI.addStyleSheet window "bootstrap.min.css"
   UI.addStyleSheet window "main.css"
+
+  -- https://stackoverflow.com/questions/36813919/bootstrap-is-not-working-on-mobile
+  meta <- UI.meta # set UI.content "width=device-width, initial-scale=1" # set UI.name "viewport"
+  getHead window #+ [ element meta ]
+  
   return window # set UI.title "Initiative Counter"
 
   -- active elements
