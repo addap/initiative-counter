@@ -50,8 +50,8 @@ setup window = do
       bdelete <- UI.button # set UI.text "-"
       on UI.click bdelete $ \_ -> removeCombatant c >> redoLayout
       
-      UI.div #. "row" #+ [ UI.span #. "col" # set UI.text (show c)
-                         , element bdelete #. "col" ]
+      UI.div # brow #+ [ UI.span # bcol 10 # set UI.text (show c)
+                         , element bdelete # bcol 2 ]
       
     redoLayout :: UI ()
     redoLayout = void $ do
@@ -79,14 +79,21 @@ setup window = do
 
       element sround # set UI.text ("Current Round: " ++ (show round))
       liftIO $ modifyIORef nextRoundRef (const nextRound)
-      
-      UI.div #. "container" #+
-        ([ UI.div #. "row" #+ [ element tname #. "col", element tinitiative #. "col", element bsubmit #. "col" ]
-        , UI.hr ]
-        ++ combatantSection ++
-        [ UI.hr
-        , UI.div #. "row" #+ [ element bswitchcombat #. "col", element bnextround #. "col", element sround #. "col" ] ]
-        ++ combatOrderSection)
+
+      let content =
+            [ UI.div # brow #+ [ element tname # bcol 5, element tinitiative # bcol 5, element bsubmit # bcol 2 ]
+            , UI.hr ]
+            ++ combatantSection ++
+            [ UI.hr
+            , UI.div # brow #+ [ element bswitchcombat # bcol 4, element bnextround # bcol 4, element sround # bcol 4 ] ]
+            ++ combatOrderSection
+                              
+      UI.div #. "container-fluid" #+
+        [ UI.div # brow #+
+          [ UI.div # bcol 12 #+
+            [ UI.div #. "jumbotron" #+ content ]
+          ]
+        ]
 
     toCombatElement :: (Int,[Combatant]) -> UI Element
     toCombatElement (i,cs) = UI.li #+ [ UI.span # set UI.text (show i ++ ": ")
@@ -128,3 +135,12 @@ setup window = do
   on UI.click bswitchcombat $ \_ -> switchCombat >> redoLayout
   
   redoLayout
+
+
+
+-- bootsrap functions
+brow :: UI Element -> UI Element
+brow e = e #. "row"
+
+bcol :: Int -> UI Element -> UI Element
+bcol n e = e #. ("col-" ++ show n)
