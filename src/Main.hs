@@ -17,7 +17,7 @@ import Core
 combatOrderLength = 10
   
 main :: IO ()
-main = startGUI defaultConfig { jsStatic = Just ".", jsAddr = Nothing } setup
+main = startGUI defaultConfig { jsStatic = Just "static", jsAddr = Nothing, jsPort = Nothing } setup
 
 setup :: Window -> UI ()
 setup window = do
