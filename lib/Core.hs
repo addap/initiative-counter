@@ -15,7 +15,9 @@ instance Show Combatant where
 
 newtype CombatOrder = CombatOrder [(Int,[Combatant])]
   deriving Show
-newtype Combat = Combat [Combatant]
+
+nextRound :: CombatOrder -> CombatOrder
+nextRound (CombatOrder co) = CombatOrder (tail co)
 
 theHeroes :: [Combatant]
 theHeroes = [ Combatant "Hassan" 7 Friend
@@ -26,25 +28,23 @@ theHeroes = [ Combatant "Hassan" 7 Friend
 isFriend :: Combatant -> Bool
 isFriend c = allegiance c == Friend
 
-mkCombat :: [Combatant] -> Combat
-mkCombat heroes = Combat heroes
-
-addFoes :: Combat -> Combatant -> Int -> Combat
-addFoes (Combat combatants) foe count = Combat combatants'
+addFoes :: [Combatant] -> Combatant -> Int -> [Combatant]
+addFoes combatants foe count = combatants'
   where combatants' = combatants ++ replicate count foe
 
 infix 2 <|>
 (<|>) :: Int -> Int -> Bool
 a <|> b = b `mod` a == 0
 
+getCombatOrder :: [Combatant] -> CombatOrder
+getCombatOrder = getCombatOrderFrom 0
 
-getCombatOrder :: Combat -> Round -> Int -> CombatOrder
-getCombatOrder (Combat combatants) round l =
+getCombatOrderFrom :: Round -> [Combatant] -> CombatOrder
+getCombatOrderFrom start combatants =
   CombatOrder
-  $ take l
   $ filter (\(_,cs) -> length cs > 0)
   $ fmap assignCombatants rounds
-  where rounds = [round..]
+  where rounds = [start..]
         assignCombatants :: Int -> (Int,[Combatant])
         assignCombatants i = (i, filter (\c -> initiative c <|> i) combatants)
 
