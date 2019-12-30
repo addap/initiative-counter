@@ -39,6 +39,7 @@ modeDisplay Fight = "block"
 modeDisplay Normal = "none"
 
 combatOrderLength = 10
+nameless = "The Unspeakable Horror"
 
 -- unionWith that always takes the first event
 infixl 4 <=>
@@ -63,77 +64,71 @@ setup window = void $ do
       display = fromObjectProperty "style.display"
 
     -- active elements
-  bsubmit <- UI.button # set UI.text "+"
-  tname <- UI.input
-  tinitiative <- UI.input
-  bswitchcombat <- UI.button
-  bendcombat <- UI.button # set UI.text "End Combat"
-  bnextround <- UI.button # set UI.text "Next Round"
-  sround <- UI.span
+  btnSubmit <- UI.button # set UI.text "+"
+  iptName <- UI.input
+  iptInitiative <- UI.input
+  btnEndCombat <- UI.button # set UI.text "End Combat"  # set display "none"
+  btnStartCombat <- UI.button # set UI.text "Start Combat"
+  btnNextRound <- UI.button # set UI.text "Next Round"
+  spRound <- UI.span
   dCombatOrderSection <- UI.div
   dCombatantSection <- UI.div
 
-  (deleteEvt, deleteHdl) <- liftIO $ (newEvent :: IO (Event (Combatant, Element), Handler (Combatant, Element)))
-  liftIO $ register deleteEvt (\(n, _) -> putStrLn (show n))
-
     -- behaviors & events
-  let eChangeMode = UI.click bswitchcombat
-      eNextRound = UI.click bnextround
-  -- make behaviors out of name and initiative
-  bName <- stepper "" $ UI.valueChange tname
-  bInitiative <- stepper 0 $ fromMaybe 1 . (readMaybe :: String -> Maybe Int) <$> UI.valueChange tinitiative
-  -- behavior that tracks if we are in fight or normal mode
-  bMode <- accumB Normal $ (const switchMode) <$> eChangeMode
-  -- filter the cases where bMode == Fight since bMode is only changed slightly after the eChangeMode event happens
-  let eEndCombat = filterE (==Fight) (bMode <@ eChangeMode)
+  bName <- stepper nameless $ (\s -> if s == "" then nameless else s) <$> UI.valueChange iptName
+  bInitiative <- stepper 1 $ fromMaybe 1 . (readMaybe :: String -> Maybe Int) <$> UI.valueChange iptInitiative
+  -- events for entering and exiting combat mode
+  let eNextRound = UI.click btnNextRound
+      eStartCombat = const Fight <$> UI.click btnStartCombat
+      eEndCombat = const Normal <$> UI.click btnEndCombat
       eResetRound = const 1 <$> eEndCombat
       eRemoveFoes = const (filter (\c -> allegiance c == Friend)) <$> eEndCombat
+  bMode <- stepper Normal $ eStartCombat <=> eEndCombat
   
+  -- custom event to handle pressing the '-' button on combatants
+  (evtDelete, hdlDelete) <- liftIO $ (newEvent :: IO (Event Combatant, Handler Combatant))
   -- behavior that contains the current "new combatant" i.e. depending on what the name and initiative fields contain and in which mode we are now
   let bNewCombatant = Combatant <$> bName <*> bInitiative <*> (modeToAllegiance <$> bMode)
       -- event that contains the new combatant by attaching the current state of the behavior to each click on bsubmit
-      eNewCombatant = bNewCombatant <@ UI.click bsubmit
+      eNewCombatant = bNewCombatant <@ UI.click btnSubmit
       -- map cons over the event to turn it into a function that adds a new combatant
       eAddCombatant = (:) <$> eNewCombatant
-      eDeleteCombatant = L.delete . fst <$> deleteEvt
+      eDeleteCombatant = L.delete  <$> evtDelete
       eChangeCombatants = eAddCombatant <=> eDeleteCombatant <=> eRemoveFoes
-  -- behavior that contains the current combatants. changed by eChangeCombatants
+  -- behavior that contains the current combatants
   bCombatants <- accumB [] eChangeCombatants
 
-  let eAddCombatantElement = combatantElement deleteHdl <$> eNewCombatant
-  -- register to event to add ui elements
-  liftIO $ register eAddCombatantElement $ \e -> runUI window (element dCombatantSection #+ [e]) >> return ()
-  -- delete combatants when their '-' button is pressed
-  liftIO $ register deleteEvt $ runUI window . delete . snd
-  -- instead of registering both functions and using runUI I could also make a behavior for both events and use the onChange event handler from that to do the same thing.
+  onChanges bCombatants (\cs -> do
+                            elm <- UI.ul #+ (combatantElement hdlDelete <$> cs)
+                            element dCombatantSection # set children [ elm ])
 
-  (eStepRound, hStepRound) <- liftIO $ (newEvent :: IO (Event Round, Handler Round))
-  bRound <- stepper 1 $ unionWith const eStepRound eResetRound
-  -- bahvior for the current combat order
-  -- let bCombatOrder :: UI (Behavior CombatOrder)
+  -- custom event to trigger updating of the round behavior
+  -- found no other way since bRound-bCombatOrder-bNextRound are recursive
+  (evtStepRound, hdlStepRound) <- liftIO $ (newEvent :: IO (Event Round, Handler Round))
+  bRound <- stepper 1 $ evtStepRound <=> eResetRound
+  -- behavior for the current combat order
   let bCombatOrder = getCombatOrderFrom <$> bRound <*> bCombatants
-      -- bRound :: UI (Behavior Round)
-      -- bNextRound :: UI (Behavior Round)
       bNextRound = fmap (\(CombatOrder co) -> fst $ co !! 1) bCombatOrder
-  -- pretty ugly but it allows me to notify the stepper of bRound that it should step to the next value which is currently in bRound
+  -- pretty ugly but it allows me to notify the stepper of bRound that it should step to the next value which is currently in bNextRound
   -- FIXME is there a better way to do recursive Behaviors?
-  liftIO $ register eNextRound $ const $ runUI window (currentValue bNextRound) >>= hStepRound
+  liftIO $ register eNextRound $ const $ runUI window (currentValue bNextRound) >>= hdlStepRound
 
   onChanges bCombatOrder (\(CombatOrder co) -> do
-                             elm <- UI.ul #+ map toCombatElement (take 10 co)
+                             elm <- UI.ul #+ (toCombatElement <$> (take combatOrderLength co))
                              element dCombatOrderSection # set children [ elm ])
 
-  element sround # sink UI.text (("Current Round: " ++) . show <$> bRound)
-  element bswitchcombat # sink UI.text (modeButton <$> bMode)
+  element spRound # sink UI.text (("Current Round: " ++) . show <$> bRound)
   element dCombatOrderSection # sink display (modeDisplay <$> bMode)
+  element btnStartCombat # sink display (modeDisplay . switchMode <$> bMode)
+  element btnEndCombat # sink display (modeDisplay <$> bMode)
   
   let content =
-        [ UI.div # brow #+ [ element tname # bcol 5, element tinitiative # bcol 5, element bsubmit # bcol 2 ]
-        , UI.hr ]
-        ++ [ element dCombatantSection ] ++
-        [ UI.hr
-        , UI.div # brow #+ [ element bswitchcombat # bcol 4, element bnextround # bcol 4, element sround # bcol 4 ] ]
-        ++ [ element dCombatOrderSection ]
+        [ UI.div # brow #+ [ element iptName # bcol 5, element iptInitiative # bcol 5, element btnSubmit # bcol 2 ]
+        , UI.hr
+        , element dCombatantSection
+        , UI.hr
+        , UI.div # brow #+ [ element btnStartCombat # bcol 4, element btnEndCombat # bcol 4, element btnNextRound # bcol 4, element spRound # bcol 4 ]
+        , element dCombatOrderSection ]
   
       layout =  UI.div #. "container-fluid" #+
                 [ UI.div # brow #+
@@ -156,13 +151,12 @@ allegianceCSS Friend = "friend"
 allegianceCSS Foe = "foe"
 
 
-combatantElement :: Handler (Combatant, Element) -> Combatant -> UI Element
+combatantElement :: Handler Combatant -> Combatant -> UI Element
 combatantElement hdl c = do
   bdelete <- UI.button # set UI.text "-"
-  elm <- UI.div # brow #+ [ UI.span # bcol 10 # set UI.text (show c)
-                             , element bdelete # bcol 2 ]
-  liftIO $ register (UI.click bdelete) $ \() -> hdl (c, elm)
-  return elm
+  liftIO $ register (UI.click bdelete) $ const $ hdl c
+  UI.div # brow #+ [ UI.span # bcol 10 # set UI.text (show c)
+                   , element bdelete # bcol 2 ]
 
 
 -- bootstrap functions
