@@ -38,18 +38,10 @@ Tested-With:         GHC == 7.6.3
 
 Extra-Source-Files:  CHANGELOG.md
                     ,README.md
-                    ,samples/README.md
                     ,js/*.html
                     ,js/*.css
                     ,js/*.js
                     ,js/lib/*.js
-
-Data-dir:           .
-Data-files:          samples/static/css/*.css
-                    ,samples/static/css/*.png
-                    ,samples/static/*.html
-                    ,samples/static/*.png
-                    ,samples/static/*.wav
 
 
 flag buildExamples
