@@ -3,7 +3,18 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    size: 2334165
+    url: https://github.com/addap/threepenny-gui/archive/050a790a7d97340cbbe9b07417a01901f6d751c9.tar.gz
+    name: threepenny-gui
+    version: 0.8.3.1
+    sha256: 7fce8af104b3900541a020885f50b2f620bac730de826f6da969436ce189748e
+    pantry-tree:
+      size: 7676
+      sha256: b904504f8d5f0458ba9528ea0a57217d9d15c1166724888fe5603936ed2dc2e7
+  original:
+    url: https://github.com/addap/threepenny-gui/archive/050a790a7d97340cbbe9b07417a01901f6d751c9.tar.gz
 snapshots:
 - completed:
     size: 524789

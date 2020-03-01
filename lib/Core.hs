@@ -3,7 +3,7 @@ module Core where
 type Name = String
 type Initiative = Int
 type Round = Int
-data Allegiance = Friend | Foe deriving Eq
+data Allegiance = Friend | Foe deriving (Eq, Read, Show)
 data Combatant = Combatant { name :: Name
                            , initiative :: Initiative
                            , allegiance :: Allegiance
@@ -12,6 +12,9 @@ data Combatant = Combatant { name :: Name
 
 instance Show Combatant where
   show c = (name c) ++ " (" ++ show (initiative c) ++ ")" 
+
+maybeCombatant :: Maybe Name -> Maybe Initiative -> Maybe Allegiance -> Maybe Combatant
+maybeCombatant mn mi ma = Combatant <$> mn <*> mi <*> ma
 
 newtype CombatOrder = CombatOrder [(Int,[Combatant])]
   deriving Show
@@ -40,6 +43,7 @@ getCombatOrder :: [Combatant] -> CombatOrder
 getCombatOrder = getCombatOrderFrom 0
 
 getCombatOrderFrom :: Round -> [Combatant] -> CombatOrder
+getCombatOrderFrom _ [] = CombatOrder []
 getCombatOrderFrom start combatants =
   CombatOrder
   $ filter (\(_,cs) -> length cs > 0)
@@ -48,3 +52,6 @@ getCombatOrderFrom start combatants =
         assignCombatants :: Int -> (Int,[Combatant])
         assignCombatants i = (i, filter (\c -> initiative c <|> i) combatants)
 
+validateInitiative :: Maybe Initiative -> Maybe Initiative
+validateInitiative (Just n) | n > 0 = Just n
+validateInitiative _ = Nothing
