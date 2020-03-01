@@ -1,28 +1,28 @@
 module Main where
 
-import qualified Graphics.UI.Threepenny as UI
-import Graphics.UI.Threepenny.Core
+import qualified Graphics.UI.Threepenny      as UI
+import           Graphics.UI.Threepenny.Core
 
 
-import Control.Monad (void, liftM, liftM2)
-import qualified Data.List as L (delete)
-import Data.Bool (bool)
-import Data.List (intersperse)
-import Data.Bifunctor
-import Data.Maybe (fromMaybe)
-import Text.Read (readMaybe)
-import Safe (atMay)
+import           Control.Monad               (liftM, liftM2, void)
+import           Data.Bifunctor
+import           Data.Bool                   (bool)
+import           Data.List                   (intersperse)
+import qualified Data.List                   as L (delete)
+import           Data.Maybe                  (fromMaybe)
+import           Safe                        (atMay)
+import           Text.Read                   (readMaybe)
 
-import Core
+import           Core
 
 data Mode = Fight | Normal deriving (Eq, Show)
 
 switchMode :: Mode -> Mode
-switchMode Fight = Normal
+switchMode Fight  = Normal
 switchMode Normal = Fight
 
 modeDisplay :: Mode -> String
-modeDisplay Fight = "block"
+modeDisplay Fight  = "block"
 modeDisplay Normal = "none"
 
 combatOrderLength = 10
@@ -31,7 +31,7 @@ nameless = "The Unspeakable Horror"
 -- unionWith that always takes the first event
 infixl 5 <=>
 (<=>) = unionWith const
-  
+
 main :: IO ()
 main = startGUI defaultConfig { jsStatic = Just "static", jsAddr = Nothing, jsPort = Nothing } setup
 
@@ -43,7 +43,7 @@ setup window = void $ do
   -- https://stackoverflow.com/questions/36813919/bootstrap-is-not-working-on-mobile
   meta <- UI.meta # set UI.content "width=device-width, initial-scale=1" # set UI.name "viewport"
   getHead window #+ [ element meta ]
-  
+
   window # set' UI.title "Initiative Counter"
 
   -- display property to hide elements
@@ -76,7 +76,7 @@ setup window = void $ do
       eResetRound = const 1 <$> eEndCombat
       eRemoveFoes = const (filter (\c -> allegiance c == Friend)) <$> eEndCombat
   bMode <- stepper Normal $ eStartCombat <=> eEndCombat
-  
+
   -- custom event to handle pressing the '-' button on combatants
   (evtDelete, hdlDelete) <- liftIO $ (newEvent :: IO (Event Combatant, Handler Combatant))
   -- behavior that contains the current "new combatant" i.e. depending on what the name and initiative fields contain and in which mode we are now
@@ -92,7 +92,7 @@ setup window = void $ do
   -- event to trigger when all combatants are dead
   let eAllDead = const () <$> filterApply ((\combatants op -> op combatants == []) <$> bCombatants) eDeleteCombatant
   liftIO $ register eAllDead hdlAllDead
-  
+
   onChanges bCombatants (\cs -> do
                             liftIO $ putStrLn $ show cs
                             elm <- UI.ul #+ (combatantElement hdlDelete <$> cs)
@@ -124,7 +124,7 @@ setup window = void $ do
         , UI.hr
         , UI.div # brow #+ [ element btnStartCombat # bcol 4, element btnEndCombat # bcol 4, element btnNextRound # bcol 4, element spRound # bcol 4 ]
         , element dCombatOrderSection ]
-  
+
       layout =  UI.div #. "container-fluid" #+
                 [ UI.div # brow #+
                   [ UI.div # bcol 12 #+
@@ -143,7 +143,7 @@ toCombatElement (i,cs) = UI.li #+ [ UI.span # set UI.text (show i ++ ": ")
 
 allegianceCSS :: Allegiance -> String
 allegianceCSS Friend = "friend"
-allegianceCSS Foe = "foe"
+allegianceCSS Foe    = "foe"
 
 
 combatantElement :: Handler Combatant -> Combatant -> UI Element
