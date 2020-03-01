@@ -17,7 +17,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: lts-14.8
+resolver: lts-14.27
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -42,7 +42,7 @@ resolver: lts-14.8
 #
 extra-deps:
   - github: addap/threepenny-gui
-    commit: 050a790a7d97340cbbe9b07417a01901f6d751c9
+    commit: abb1817f6d02189ac0d611c68f98b6867c4a3f44
 #  - ../threepenny-gui
 
 # Override default flag values for local packages and extra-deps

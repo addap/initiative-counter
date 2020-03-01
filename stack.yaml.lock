@@ -5,19 +5,19 @@
 
 packages:
 - completed:
-    size: 2334165
-    url: https://github.com/addap/threepenny-gui/archive/050a790a7d97340cbbe9b07417a01901f6d751c9.tar.gz
+    size: 2334472
+    url: https://github.com/addap/threepenny-gui/archive/abb1817f6d02189ac0d611c68f98b6867c4a3f44.tar.gz
     name: threepenny-gui
     version: 0.8.3.1
-    sha256: 7fce8af104b3900541a020885f50b2f620bac730de826f6da969436ce189748e
+    sha256: c8dd2f2892e9a88eacbd730419a8bae1c39d21ef04f551d593019b84013bb381
     pantry-tree:
-      size: 7676
-      sha256: b904504f8d5f0458ba9528ea0a57217d9d15c1166724888fe5603936ed2dc2e7
+      size: 7731
+      sha256: de720a36765999eb056cb4b439f94b364b5c51f5652c37431ca2b463966f4c81
   original:
-    url: https://github.com/addap/threepenny-gui/archive/050a790a7d97340cbbe9b07417a01901f6d751c9.tar.gz
+    url: https://github.com/addap/threepenny-gui/archive/abb1817f6d02189ac0d611c68f98b6867c4a3f44.tar.gz
 snapshots:
 - completed:
-    size: 524789
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/8.yaml
-    sha256: 8af5eb80734f02621d37e82cc0cde614af2ddc9c320610acb0b1b6d9ac162930
-  original: lts-14.8
+    size: 524996
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/27.yaml
+    sha256: 7ea31a280c56bf36ff591a7397cc384d0dff622e7f9e4225b47d8980f019a0f0
+  original: lts-14.27

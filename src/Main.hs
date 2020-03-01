@@ -46,10 +46,6 @@ setup window = void $ do
 
   window # set' UI.title "Initiative Counter"
 
-  -- display property to hide elements
-  let display :: Attr Element String
-      display = fromObjectProperty "style.display"
-
     -- active elements
   btnSubmit <- UI.button # set UI.text "+"
   iptName <- UI.input
@@ -57,7 +53,7 @@ setup window = void $ do
   iptAllegiance <- UI.select #+ [ UI.option # set UI.value "Friend" # set UI.text "Friend"
                                 , UI.option # set UI.value "Foe" # set UI.text "Foe"
                                 ]
-  btnEndCombat <- UI.button # set UI.text "End Combat"  # set display "none"
+  btnEndCombat <- UI.button # set UI.text "End Combat"  # set UI.display "none"
   btnStartCombat <- UI.button # set UI.text "Start Combat"
   btnNextRound <- UI.button # set UI.text "Next Round"
   spRound <- UI.span
@@ -113,9 +109,9 @@ setup window = void $ do
                              element dCombatOrderSection # set children [ elm ])
 
   element spRound # sink UI.text (("Current Round: " ++) . show <$> bRound)
-  element dCombatOrderSection # sink display (modeDisplay <$> bMode)
-  element btnStartCombat # sink display (modeDisplay . switchMode <$> bMode)
-  element btnEndCombat # sink display (modeDisplay <$> bMode)
+  element dCombatOrderSection # sink UI.display (modeDisplay <$> bMode)
+  element btnStartCombat # sink UI.display (modeDisplay . switchMode <$> bMode)
+  element btnEndCombat # sink UI.display (modeDisplay <$> bMode)
 
   let content =
         [ UI.div # brow #+ [ element iptName # bcol 4, element iptInitiative # bcol 2, element iptAllegiance # bcol 4, element btnSubmit # bcol 2 ]
