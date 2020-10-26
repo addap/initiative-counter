@@ -43,9 +43,8 @@ readAllegiance :: String -> Maybe Allegiance
 readAllegiance = readMaybe
 
 main :: IO ()
-main = startGUI
-  defaultConfig { jsStatic = Just "static", jsAddr = Nothing, jsPort = Nothing }
-  setup
+main =
+  startGUI defaultConfig { jsStatic = Just "static", jsAddr = Nothing, jsPort = Nothing } setup
 
 setup :: Window -> UI ()
 setup window = void $ do
@@ -53,9 +52,7 @@ setup window = void $ do
   UI.addStyleSheet window "main.css"
 
   -- https://stackoverflow.com/questions/36813919/bootstrap-is-not-working-on-mobile
-  meta <- UI.meta # set UI.content "width=device-width, initial-scale=1" # set
-    UI.name
-    "viewport"
+  meta <- UI.meta # set UI.content "width=device-width, initial-scale=1" # set UI.name "viewport"
   getHead window #+ [element meta]
 
   window # set' UI.title "Initiative Counter"
@@ -69,41 +66,30 @@ setup window = void $ do
       #+ [ UI.option # set UI.value "Friend" # set UI.text "Friend"
          , UI.option # set UI.value "Foe" # set UI.text "Foe"
          ]
-  btnEndCombat <- UI.button # set UI.text "End Combat" # set UI.display "none"
-  btnStartCombat      <- UI.button # set UI.text "Start Combat"
-  btnNextRound        <- UI.button # set UI.text "Next Round"
-  spRound             <- UI.span
-  dCombatOrderSection <- UI.div
-  dCombatantSection   <- UI.div
+  btnEndCombat             <- UI.button # set UI.text "End Combat" # set UI.display "none"
+  btnStartCombat           <- UI.button # set UI.text "Start Combat"
+  btnNextRound             <- UI.button # set UI.text "Next Round"
+  spRound                  <- UI.span
+  dCombatOrderSection      <- UI.div
+  dCombatantSection        <- UI.div
 
     -- behaviors & events
-  bName               <-
-    stepper Nothing
-    $   (\s -> if s == "" then Nothing else Just s)
-    <$> UI.valueChange iptName
-  bInitiative <-
-    stepper Nothing
-    $   (validateInitiative . readInt)
-    <$> UI.valueChange iptInitiative
-  bAllegiance <-
-    stepper (Just Friend)
-    $   readAllegiance
-    <$> UI.selectionChangeValue iptAllegiance
+  bName <- stepper Nothing $ (\s -> if s == "" then Nothing else Just s) <$> UI.valueChange iptName
+  bInitiative <- stepper Nothing $ validateInitiative . readInt <$> UI.valueChange iptInitiative
+  bAllegiance <- stepper (Just Friend) $ readAllegiance <$> UI.selectionChangeValue iptAllegiance
 
   -- events for entering and exiting combat mode
   (evtAllDead, hdlAllDead) <- liftIO (newEvent :: IO (Event (), Handler ()))
-  let
-    eStartCombat = const Fight <$> UI.click btnStartCombat
-    eEndCombat   = const Normal <$> UI.click btnEndCombat <=> evtAllDead
-    eResetRound  = const 1 <$> eEndCombat
-    eRemoveFoes  = const (filter (\c -> allegiance c == Friend)) <$> eEndCombat
+  let eStartCombat = Fight <$ UI.click btnStartCombat
+      eEndCombat   = Normal <$ UI.click btnEndCombat <=> evtAllDead
+      eResetRound  = 1 <$ eEndCombat
+      eRemoveFoes  = filter (\c -> allegiance c == Friend) <$ eEndCombat
   bMode                  <- stepper Normal $ eStartCombat <=> eEndCombat
 
   -- custom event to handle pressing the '-' button on combatants
-  (evtDelete, hdlDelete) <-
-    liftIO $ (newEvent :: IO (Event Combatant, Handler Combatant))
+  (evtDelete, hdlDelete) <- liftIO (newEvent :: IO (Event Combatant, Handler Combatant))
   -- behavior that contains the current "new combatant" i.e. depending on what the name and initiative fields contain and in which mode we are now
-  let bNewCombatant = maybeCombatant <$> bName <*> bInitiative <*> bAllegiance
+  let bNewCombatant     = maybeCombatant <$> bName <*> bInitiative <*> bAllegiance
       -- event that contains the new combatant by attaching the current state of the behavior to each click on bsubmit but only if there actually is a combatant
       eNewCombatant     = filterJust $ bNewCombatant <@ UI.click btnSubmit
       -- map cons over the event to turn it into a function that adds a new combatant
@@ -113,9 +99,8 @@ setup window = void $ do
   -- behavior that contains the current combatants
   bCombatants <- accumB [] eChangeCombatants
   -- event to trigger when all combatants are dead
-  let eAllDead = void $ filterApply
-        ((\combatants op -> null $ op combatants) <$> bCombatants)
-        eDeleteCombatant
+  let eAllDead = void
+        $ filterApply ((\combatants op -> null $ op combatants) <$> bCombatants) eDeleteCombatant
   liftIO $ register eAllDead hdlAllDead
 
   onChanges
@@ -127,14 +112,12 @@ setup window = void $ do
     )
 
   -- custom event to trigger updating of the round behavior
-  (evtStepRound, hdlStepRound) <-
-    liftIO $ (newEvent :: IO (Event Round, Handler Round))
-  bRound <- stepper 1 $ evtStepRound <=> eResetRound
+  (evtStepRound, hdlStepRound) <- liftIO (newEvent :: IO (Event Round, Handler Round))
+  bRound                       <- stepper 1 $ evtStepRound <=> eResetRound
   -- behavior for the current combat order
   let bCombatOrder = getCombatOrderFrom <$> bRound <*> bCombatants
-      bNextRound =
-        (\(CombatOrder co) -> maybe 1 fst (atMay co 1)) <$> bCombatOrder
-      eNextRound = bNextRound <@ UI.click btnNextRound
+      bNextRound   = (\(CombatOrder co) -> maybe 1 fst (atMay co 1)) <$> bCombatOrder
+      eNextRound   = bNextRound <@ UI.click btnNextRound
   -- TODO was not able to use RecursiveDo here. If I remove this event and use eNextround directly in bRound the site does not load.
   liftIO $ register eNextRound hdlStepRound
 
@@ -174,22 +157,15 @@ setup window = void $ do
       layout =
         UI.div
           #. "container-fluid"
-          #+ [ UI.div
-               #  brow
-               #+ [UI.div # bcol 12 #+ [UI.div #. "jumbotron" #+ content]]
-             ]
+          #+ [UI.div # brow #+ [UI.div # bcol 12 #+ [UI.div #. "jumbotron" #+ content]]]
 
   getBody window #+ [layout]
 
 
 
 toCombatElement :: (Int, [Combatant]) -> UI Element
-toCombatElement (i, cs) =
-  UI.li #+ [UI.span # set UI.text (show i ++ ": "), UI.span #+ spans]
- where
-  spans = map
-    (\c -> UI.span #. allegianceCSS (allegiance c) # set UI.text (name c))
-    cs
+toCombatElement (i, cs) = UI.li #+ [UI.span # set UI.text (show i ++ ": "), UI.span #+ spans]
+  where spans = map (\c -> UI.span #. allegianceCSS (allegiance c) # set UI.text (name c)) cs
 
 allegianceCSS :: Allegiance -> String
 allegianceCSS Friend = "friend"
@@ -202,9 +178,7 @@ combatantElement hdl c = do
   liftIO $ register (UI.click bdelete) $ const $ hdl c
   UI.div
     #  brow
-    #+ [ UI.div
-       #  bcol 10
-       #+ [UI.span # set UI.text (show c) #. allegianceCSS (allegiance c)]
+    #+ [ UI.div # bcol 10 #+ [UI.span # set UI.text (show c) #. allegianceCSS (allegiance c)]
        , element bdelete # bcol 2
        ]
 

@@ -1,4 +1,15 @@
-module Core where
+module Core
+  ( Combatant(..)
+  , maybeCombatant
+  , Allegiance(..)
+  , Name
+  , Initiative
+  , Round
+  , validateInitiative
+  , CombatOrder(..)
+  , getCombatOrderFrom
+  )
+where
 
 type Name = String
 
@@ -31,18 +42,13 @@ nextRound (CombatOrder co) = CombatOrder (tail co)
 
 theHeroes :: [Combatant]
 theHeroes =
-  [ Combatant "Hassan" 7 Friend
-  , Combatant "Nolleman" 9 Friend
-  , Combatant "Johann" 13 Friend
-  ]
+  [Combatant "Hassan" 7 Friend, Combatant "Nolleman" 9 Friend, Combatant "Johann" 13 Friend]
 
 isFriend :: Combatant -> Bool
 isFriend c = allegiance c == Friend
 
 addFoes :: [Combatant] -> Combatant -> Int -> [Combatant]
-addFoes combatants foe count = combatants'
-  where
-    combatants' = combatants ++ replicate count foe
+addFoes combatants foe count = combatants' where combatants' = combatants ++ replicate count foe
 
 infix 2 <|>
 
@@ -53,16 +59,15 @@ getCombatOrder :: [Combatant] -> CombatOrder
 getCombatOrder = getCombatOrderFrom 0
 
 getCombatOrderFrom :: Round -> [Combatant] -> CombatOrder
-getCombatOrderFrom _ [] = CombatOrder []
-getCombatOrderFrom start combatants =
-  CombatOrder $
-  filter (\(_, cs) -> length cs > 0) $ fmap assignCombatants rounds
-  where
-    rounds = [start ..]
-    assignCombatants :: Int -> (Int, [Combatant])
-    assignCombatants i = (i, filter (\c -> initiative c <|> i) combatants)
+getCombatOrderFrom _     []         = CombatOrder []
+getCombatOrderFrom start combatants = CombatOrder $ filter (\(_, cs) -> length cs > 0) $ fmap
+  assignCombatants
+  rounds
+ where
+  rounds = [start ..]
+  assignCombatants :: Int -> (Int, [Combatant])
+  assignCombatants i = (i, filter (\c -> initiative c <|> i) combatants)
 
 validateInitiative :: Maybe Initiative -> Maybe Initiative
-validateInitiative (Just n)
-  | n > 0 = Just n
-validateInitiative _ = Nothing
+validateInitiative (Just n) | n > 0 = Just n
+validateInitiative _                = Nothing
